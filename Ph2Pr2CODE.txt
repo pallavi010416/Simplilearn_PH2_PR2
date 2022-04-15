@@ -1,0 +1,143 @@
+Project: Fetchinf file from Database
+
+CODES:
+
+*********************************FETCH.JAVA*******************************
+
+
+import java.beans.Statement;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Properties;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/search")
+public class fetching extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+ 
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+		
+		PrintWriter out = response.getWriter();
+		Properties props = new Properties();
+		response.setContentType("text/html");
+		
+		
+		InputStream in = getServletContext().getResourceAsStream("/WEB-INF/application.properties");
+		props.load(in);
+
+		Connection conn = dbconn.getConnection(props);
+
+		if (conn != null) {
+			out.print("Connection is Established <br>");
+			
+			try {
+				Statement stmt=(Statement) conn.createStatement();
+				ResultSet rs= ((java.sql.Statement) stmt).executeQuery("select * from eproduct");
+				
+				while(rs.next()) {
+					
+					out.print(rs.getInt(1)+" "+rs.getString(2)+" "+rs.getBigDecimal(3)+
+							" "+rs.getTimestamp(4)+"<br>");
+				}
+				
+				  
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		else {
+			out.print("Error while connecting connection");
+		}
+		
+			
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doGet(request, response);
+	}
+
+}
+
+
+
+*********************************DBCONN.JAVA******************************
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Properties;
+
+public class dbconn {
+
+	public static Connection getConnection(Properties props) {
+		
+		
+		Connection connection=null;
+		
+		try {
+			//get url,username,password
+		String driver= props.getProperty("driver");
+		String url= props.getProperty("url");
+		String username= props.getProperty("username");
+		String password= props.getProperty("password");
+		
+		//to load driver
+			Class.forName(driver);
+			
+			try {
+				connection= DriverManager.getConnection(url, username, password);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return connection;
+	}
+	
+}
+
+
+
+*********************************APPLICATION.PROPERTIES*********************
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/ecommerce
+username=root
+password=Kaustubh@123
+
+
+
+**********************************INDEX.HTML******************************
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+</head>
+<body>
+<form>
+<form action = "search" method = " post">
+Enter the product id: <input type="text" name="name"> <br>
+<input type="submit" value="Search">
+
+</form>
+
+</body>
+</html>
+
